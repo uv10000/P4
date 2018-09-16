@@ -44,7 +44,7 @@ My project includes the following files:
 * Your are reading [writeup_P4_behavioural_cloning_Ulrich_Voll.md](https://github.com/uv10000/P4/blob/master/writeup_P4_behavioural_cloning_Ulrich_Voll.md) summarizing the results
 
 
-For reproducing my results by running model.py, please put the files provided by Udacity (Track 1) on level higher, i.e. 
+For reproducing my results by running model.py, please put the files provided by Udacity (Track 1) one level higher, i.e. 
 
 "ls ../data_provided_by_udacity/" 
 
@@ -53,12 +53,14 @@ should yield:
  "driving_log.csv  IMG"
 
 #### 2. Submission includes functional code
+For a first preview you might want to download and play the [video.mp4](https://github.com/uv10000/P4/blob/master/video.mp4) 
+
 Using the Udacity provided simulator and my drive.py file, the car can be driven autonomously around the track by executing 
 ```sh
 python drive.py model.h5
 ```
+(Provided the Unity-simulator is up and running.)
 
-For afirst preview you might want to download and viev the [video.mp4](https://github.com/uv10000/P4/blob/master/video.mp4) 
 
 #### 3. Submission code is usable and readable
 
