@@ -9,7 +9,7 @@ from random import shuffle
 
 # read in udacity data from file
 lines=[]
-with open('data/data/driving_log.csv') as csvfile:
+with open('../data_provided_by_udacity/driving_log.csv') as csvfile:
     reader=csv.reader(csvfile)
     i_have_seen_firstline=False
     for line in reader:
@@ -37,9 +37,9 @@ def generator(samples, batch_size=32):
             angles = []
             for batch_sample in batch_samples:
                 #name = './IMG/'+batch_sample[0].split('/')[-1]
-                current_path = 'data/data/IMG/' + batch_sample[0].split('/')[-1] 
-                current_left_path = 'data/data/IMG/' + batch_sample[1].split('/')[-1] 
-                current_right_path = 'data/data/IMG/' + batch_sample[2].split('/')[-1] 
+                current_path = '../data_provided_by_udacity/IMG/' + batch_sample[0].split('/')[-1] 
+                current_left_path = '../data_provided_by_udacity/IMG/' + batch_sample[1].split('/')[-1] 
+                current_right_path = '../data_provided_by_udacity/IMG/' + batch_sample[2].split('/')[-1] 
                 #center_image = cv2.imread(current_path)
                 center_image = ndimage.imread(current_path)
                 left_image = ndimage.imread(current_left_path) 
@@ -92,7 +92,7 @@ validation_generator = generator(validation_samples, batch_size=my_batch_size)
 ch, row, col = 3, 160, 320  # Trimmed image format
 
 # optionally perform dropout in some layers, see below
-dropout_prob=0.1#0.8
+dropout_prob=0.0#0.8
 
 model=Sequential()
 #model.add(Lambda(lambda x: x/255.0 -0.5, input_shape=(160,320,3)))
