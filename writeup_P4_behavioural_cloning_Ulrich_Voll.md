@@ -114,9 +114,11 @@ The generator hands out batches of desired size upon reading an array of lines.
 
 
 In more detail, the generator does the following
+For a first preview you might want to download and play the [video.mp4](https://github.com/uv10000/P4/blob/master/video.mp4) 
 
  * initially, it  performes random shuffle of all samples (line 32)
- * the input array "samples" containing lines read from the .csv fiel is cut into batches of size batch_size. (line 34). These batches are treated  one after the other as follows.
+ * the input array "samples" containing lines read from the .csv file is cut into batches of size "batch_size". (line 34). These batches are treated  one after the other as follows.
+ 
  * Fore each batch and for each  line extract three images, corresponding to center, left and right camera, as well as the center angle. I used ndimage.imread, but I left various alternatives as commented out lines in the code. (model.py lines 40-50) 
 
 * create "fictitious" values for left_angle and right angle from center_angle by adding an offset called "correction" (lines 51-56). I tuned the parameter to a value of 0.003. Attempts (unsuccessful) using a multiplicative correction are commented out. 
@@ -125,7 +127,7 @@ In more detail, the generator does the following
 
 * Optionally, upon the flag "augment_by_flipping", all values are doubled by adding the respective mirror image of both image / angle. (64-75)
 
-* Finally the batch consisting of x and y values is converted to a numpy array, randomly permuted and handed out by the yield-comman. 
+* Finally the batch consisting of x and y values including the augmented values is converted to a numpy array, randomly permuted and handed out by the yield-comman. 
 
  The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track. In fact it now seems to be able to go on forever on Track 1. However it fails badly, and almost immediately on Track 2. 
 
@@ -134,10 +136,11 @@ In more detail, the generator does the following
 The model used an adam optimizer, so the learning rate was not tuned manually (model.py line 170).
 
 I included dropout using a parameter of 0.1 (= 0.9 keep_prob, I had to learn this ...). Though I do not think this was mission critical, i.e. the model trained without dropout performed better than with dropout, on Track 1 that is. 
+Remark: just before the first submission I decided to set the dropout probability to 0.0 because the car drives better this way (less wiggling). 
 
 As suggested in class, I used the images of the left and the right cameras. Fictitious steering angles were computed using an offset parameter "correction" which I set to 0.003 in the final version (corresponding to a steering wheel (sic) angle of roughly 3°). 
 
-In my interpretation, this seems to encourage the system to return back to the middle, similar to a P-Controller somehow molded into the end-to-end system. An alternative option serving the same end would have been deliberately driving "off centre" and then "showing" the system how to steer back into the middle. 
+In my interpretation, this seems to encourage the system to return back to the middle, similar to a P-Controller somehow molded into the end-to-end system. An alternative method serving the same end would have been to deliberately drive "off centre" in self generated training runs, and then "showing" the system how to steer back into the middle, by recording only the stretches of time where the car is being brought back to centre and ommiting the stretches of time where it is deliberately moved away from the centre of the lane. 
 
  One might ask if it were better to separate these two issues by letting the CNN merely provide a desired heading, and a dedicated "low-level"-controller do the actual steering. But this would mean abondoning the "end-to-end" approach. I would be grateful to you reviewers if you could comment on what you think is better. 
 
@@ -145,7 +148,7 @@ As suggested in class, I included the mirror image for every image in the traini
 
 Both employing additional cameras and reflections are happening in the generator as described above.
 
-Finally I applied clipping as suggested. However this did not have a big effect. Possibly the training time went down (smaller modell) but performance without clipping was even better, according to my impression. 
+Finally I applied clipping as suggested. However this did not have a big effect. Possibly the training time went down (smaller modell) but performance without clipping was even better, according to my impression. Clearly inference can be performed faster in the presence of clipping in that less convolutions have to be performed. I think it does not greatly reduce model size though, as only the parameters of the convolultions have to be stored in a CNN. 
 
 
 #### 4. Appropriate training data
@@ -168,9 +171,9 @@ My second step was to use a convolution neural network model similar to the LeNe
 
 The LeNet model was fitting quite well, no overfitting, and driving quite nicely and smoothely on Track 1. However, the vehicle turned right into the sand just after the bridge, every single time,  and I could not improve on this by merely tuning parameters. 
 
-I was not sure if I should focus on getting more training data (I was having troubles with acquiring data on my own, as I did not have a joystick and am finding it very hard ) or on introducing a more complicated network architecture.
+I was not sure if I should focus on getting more training data (I was having troubles with acquiring data on my own, as I did not have a joystick and am finding it very hard to acquire reasonable data via keyboard) or on introducing a more complicated network architecture.
 
-I decided to start with the NVIDA architecture (as suggested in class, quoted above). This almost immediately did the trick. 
+I decided to start with implementing the NVIDA architecture (as suggested in class, quoted above). Fortunately, this almost immediately did the trick. 
 
 At the end of the process, the vehicle is able to drive autonomously around the track without leaving the road. As far as Track 1 is concerned it seems to be able to keep this up indefinitely. 
 
@@ -201,11 +204,11 @@ The final model architecture (model.py lines 81-165) consisted of a convolution 
 | Fully connected		    | incl. RELU   | 10        									          |          161 ff            |
 | Fully connected		    |   steering angle       (a regression problem!)    | 1        									          |          165 ff            |
 
-This is essentially the architecture provided by the aforementioned NVIDIA research papers.
+This is essentially the architecture provided by the aforementioned NVIDIA research paper.
 
-Note that there are no pooling layers.
+Note that there are no pooling layers. (I would like to understand why they seem to be dispensable.)
 
-I added some dropout layers but I do not think they were mission critical. There was no overfitting (on Track 1!), even with dropout probability set to 0.0. 
+I added some dropout layers but I do not think they were mission critical. There was no overfitting (on Track 1!), even with dropout probability set to 0.0. Remark: Just before submission I decided to disable dropout as the results were better without!
 
 #### 3. Creation of the Training Set & Training Process
 
@@ -215,13 +218,14 @@ Some 8000 lines in the data set correspont to some 24000 images plus correspondi
 
 I randomly shuffled the (original!) data set and put 20% of the data into a validation set. 
 
+I used an adam optimizer so that manually training the learning rate wasn't necessary.
+
  <p align="center">
   <img width="400" src="./training_validation_errors.png">
 </p>
 
-I used an adam optimizer so that manually training the learning rate wasn't necessary.
 
-The plot shows that both validation and training error are small from the very start (on the scale of epochs at least). Presumably convergenc happens so fast that it does not reflect on such a coarse time scale. 
+This plot shows that both validation and training error are small from the very start (on the scale of epochs at least). Presumably convergenc happens so fast that it does not reflect on such a coarse time scale. Indeed during the first steps of the optimization one can see values for training and validation error that are substatially higher, decaying rapidly.
 
 
 
@@ -258,14 +262,15 @@ I am puzzled about the fact that the validation error is low from the very start
 
 ----
 #### 4. Regularisation, where to apply dropout
+Remark: Just before the first submission I decided to turn off dropout because it yields better results this way.
 Concerning dropout: Apparently it makes no difference for my model on Track 1 if I turn off dropout. I think it drives even more steadily without! Using the side cameras definitely helped with LeNet. I have not attempted to turn of the side cameras in the presence of the NVIDIA-net-architecture. 
-Moreover I have no idea where to apply dropout layers. 
+Moreover I have no clear concept of where to apply dropout layers. 
 
-I did not have the time to try L2 regularisation. Due to time constraints, and then there was no pressing need for regularisation as mentioned above. 
+I did not have the time to try L2 regularisation. Due to time constraints. And then there was no pressing need for regularisation as mentioned above. 
 
 ----
 #### 5. Clipping/Crooping did not help for performance 
-Clipping sounded like a good idea but it (slightly, subjectively) deteriorated driving performance. Admittedly clipping has a sustantial impact on model size. Possible making the images coarser would have also help (=somewhat equivalent to pooling layers?! ). The advice to use the coarsest level of resolution when recording training data also points in this direction.
+Clipping sounded like a good idea but it (slightly, subjectively) deteriorated driving performance. Admittedly clipping has a sustantial impact on model size, or at least on inference time. Possible making the images coarser would have also helped (=somewhat equivalent to pooling layers?! ). The advice to use the coarsest level of resolution when recording training data also seems to point in this direction.
 
 
 -----
@@ -276,7 +281,7 @@ Why did I get away without using any pooling layers? I did not use any as there 
 
 -----
 #### 7. No transformation to other colour space
-Other than in the NVIDA paper I did not apply any colour-space conversions. I used RGB right way, successfully.  
+Other than in the NVIDA paper I did not apply any colour-space conversions. I used RGB right away, successfully.  
 
 
 
