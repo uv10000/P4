@@ -35,7 +35,7 @@ My project includes the following files:
 *  [model.py](https://github.com/uv10000/P4/blob/master/model.py) containing the script to create and train the model
 * [drive.py](https://github.com/uv10000/P4/blob/master/drive.py) for driving the car in autonomous mode
 * [model.h5](https://github.com/uv10000/P4/blob/master/model.h5) containing a trained convolution neural network 
-* writeup_report.md or writeup_report.pdf summarizing the results
+* Your are reading [writeup_P4_behavioural_cloning_Ulrich_Voll.md](https://github.com/uv10000/P4/blob/master/writeup_P4_behavioural_cloning_Ulrich_Voll.md) summarizing the results
 
 #### 2. Submission includes functional code
 Using the Udacity provided simulator and my drive.py file, the car can be driven autonomously around the track by executing 
@@ -45,21 +45,84 @@ python drive.py model.h5
 
 #### 3. Submission code is usable and readable
 
-The model.py file contains the code for training and saving the convolution neural network. The file shows the pipeline I used for training and validating the model, and it contains comments to explain how the code works.
+The [model.py](https://github.com/uv10000/P4/blob/master/model.py) file contains the code for training and saving the convolution neural network. The file shows the pipeline I used for training and validating the model, and it contains comments to explain how the code works.
 
 ### Model Architecture and Training Strategy
 
 #### 1. An appropriate model architecture has been employed
 
-My model consists of a convolution neural network with 3x3 filter sizes and depths between 32 and 128 (model.py lines 18-24) 
+My model consists of a convolutional neural network along the lines of the [NVIDIA paper](https://arxiv.org/abs/1604.07316) recommended in class (cf. model.py lines 97-165). 
 
-The model includes RELU layers to introduce nonlinearity (code line 20), and the data is normalized in the model using a Keras lambda layer (code line 18). 
+My earlier attempts trying to adapt variations of the LeNet architecture were unsuccessful. 
+
+The model includes RELU layers to introduce nonlinearity (code lines 112 and others, cf. the respective argument to the Conv2D commands, and the "model.add(Activation('relu'))" lines for the fully connected layers).
+
+The data is normalized in the model using a Keras lambda layer (code lines 100 f). 
+
+My final model consisted of the following layers:
+
+| Layer         		    |     Description	 | Shape        					            | line number in model.py
+|:---------------------:|:--------------------------------------:|:------------------:|:---------- |
+| Input         		   |      | 160x320x3 RGB image   							      |     94-100                 |
+| Normalization     	| lambda x: x/127.5 - 1. | 160x320x3 	  |            100          |
+| cropping (optional)     	| 50 rows from above, 20 from below | 90x320x3 	  |      104-107                |
+| Convolution 5x5     	| 1x1 stride, valid padding   |28x28x6 	  |                      |
+| RELU					        |												                        | ac1                  |
+| Max pooling	      	  | 2x2 stride, same padding |  14x14x6 		| ap1                  |
+| Convolution 5x5     	| 1x1 stride, valid padding | 10x10x16 	|                      |
+| RELU					        |  |												                        | ac2                  |
+| Max pooling	      	  | 2x2 stride, same padding |  5x5x16 			| ap2                  |
+| Flatten        		    | 5x5x16 |  400        									  |                      |
+| Fully connected		    |  | 120        									          |                      |
+| RELU					        |	                        											|        |               |
+| Dropout               |            |                                    | fc1                  |
+| Fully connected		    | | 84         									          |                      |
+| RELU 			            |	 |			                        								|             |         | 
+| Dropout               |                                               | fc2                  |
+| Fully connected		    | | 43         									          | fc3                  |
+| Softmax				        | (no RELU nor Max Pooling nor Dropout here)    |                      | |
+
 
 #### 2. Attempts to reduce overfitting in the model
 
 The model contains dropout layers in order to reduce overfitting (model.py lines 21). 
 
-The model was trained and validated on different data sets to ensure that the model was not overfitting (code line 10-16). The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
+The model was trained and validated on the data set provided by Udacity.
+
+The original amount of 8036 datasets  (= 8036 * 3 images, due to the additional left/right cameras) were split into a training set containing 6428 datasets and a validation set containing 1608 datasets (=20%). 
+```
+from sklearn.model_selection import train_test_split
+train_samples, validation_samples = train_test_split(lines, test_size=0.2) 
+```
+
+ In order to ensure that the model was not overfitting various methods of data augmentation were employed.
+
+
+ Data augmentation takes place in a python generator (model.py lines 29 - 79 ):
+
+ ``` python 
+ def generator(samples, batch_size=32):  
+     ...
+     yield sklearn.utils.shuffle(X_train, y_train)
+ ``` 
+The generator hands out batches of desired size upon reading an array of lines. 
+
+
+In more detail, the generator does the following
+
+ * initially, it  performes random shuffle of all samples (line 32)
+ * the input array "samples" containing lines read from the .csv fiel is cut into batches of size batch_size. (line 34). These batches are treated  one after the other as follows.
+ * Fore each batch and for each  line extract three images, corresponding to center, left and right camera, as well as the center angle. I used ndimage.imread, but I left various alternatives as commented out lines in the code. (model.py lines 40-50) 
+
+* create "fictitious" values for left_angle and right angle from center_angle by adding an offset called "correction" (lines 51-56). I tuned the parameter to a value of 0.003. Attempts (unsuccessful) using a multiplicative correction are commented out. 
+
+* Optionally, upon the flag "use_all_cameras", either only the center values for image and angle are appended to the batch, or all six values (center, left, right / image, steering angle). (56-63)
+
+* Optionally, upon the flag "augment_by_flipping", all values are doubled by adding the respective mirror image of both image / angle. (64-75)
+
+* Finally the batch consisting of x and y values is converted to a numpy array, randomly permuted and handed out by the yield-comman. 
+
+ The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
 
 #### 3. Model parameter tuning
 
