@@ -35,13 +35,6 @@ The goals / steps of this project are the following:
 
 #### 1. Submission includes all required files and can be used to run the simulator in autonomous mode
 
-For reproducing my results, please put the files provided by Udacity (Track 1) on level higher, i.e. 
-
-"ls ../data_provided_by_udacity/" 
-
-should yield:
-
- "driving_log.csv  IMG"
 
 My project includes the following files:
 * [video.mp4](https://github.com/uv10000/P4/blob/master/video.mp4) shows the final CNN performing on Track 1 for substantially more than 1 entire lap. It follows the road quite nicely and seems to be able to perform an indefinite number of laps. 
@@ -49,6 +42,15 @@ My project includes the following files:
 * [drive.py](https://github.com/uv10000/P4/blob/master/drive.py) for driving the car in autonomous mode. Nearly unmodified, but I increased the set point for velocity to the max. 
 * [model.h5](https://github.com/uv10000/P4/blob/master/model.h5) containing a trained convolution neural network 
 * Your are reading [writeup_P4_behavioural_cloning_Ulrich_Voll.md](https://github.com/uv10000/P4/blob/master/writeup_P4_behavioural_cloning_Ulrich_Voll.md) summarizing the results
+
+
+For reproducing my results by running model.py, please put the files provided by Udacity (Track 1) on level higher, i.e. 
+
+"ls ../data_provided_by_udacity/" 
+
+should yield:
+
+ "driving_log.csv  IMG"
 
 #### 2. Submission includes functional code
 Using the Udacity provided simulator and my drive.py file, the car can be driven autonomously around the track by executing 
@@ -84,8 +86,10 @@ The data is normalized in the model using a Keras lambda layer (code lines 100 f
 
 The model was trained and validated on the data set provided by Udacity.
 
-The model contains dropout layers in order to reduce overfitting (model.py lines 109, 155,159). 
 
+
+The model contains dropout layers in order to reduce overfitting (model.py lines 109, 155,159). 
+REMARK: For the final version I have set the dropout probability to 0.0 as this yields better driving performance.
 
 
 The original amount of 8036 datasets  (= 8036 * 3 images, due to the additional left/right cameras) were split into a training set containing 6428 datasets and a validation set containing 1608 datasets (=20%). 
