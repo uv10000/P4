@@ -35,6 +35,14 @@ The goals / steps of this project are the following:
 
 #### 1. Submission includes all required files and can be used to run the simulator in autonomous mode
 
+For reproducing my results, please put the files provided by Udacity (Track 1) on level higher, i.e. 
+
+"ls ../data_provided_by_udacity/" 
+
+should yield:
+
+ "driving_log.csv  IMG"
+
 My project includes the following files:
 * [video.mp4](https://github.com/uv10000/P4/blob/master/video.mp4) shows the final CNN performing on Track 1 for substantially more than 1 entire lap. It follows the road quite nicely and seems to be able to perform an indefinite number of laps. 
 *  [model.py](https://github.com/uv10000/P4/blob/master/model.py) containing the script to create and train the model
@@ -266,4 +274,8 @@ Other than in the NVIDA paper I did not apply any colour-space conversions. I us
 
 
 
+-----
+#### 8. No correlation between consecutive timesteps
+Each picture is treated separately, and in total isolation.  But clearly pictures (and even more so the vehicle state) will evolve continuously.   
+Clearly this information is "thrown away" in the present algorithm. What would be a good way of making use of this. RNN? Averaging over the last few images/angles? Or even making predictions like in a Kalman filter based on a vehicle model?
 
